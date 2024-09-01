@@ -35,6 +35,7 @@ struct Limit {
     orders: Vec<Order>
 }
 
+// A bucket sitting at a price level, containing a bunch of orders from different people with different sizes.
 impl Limit {
     // When making a new limit, we need to specify on what price level this limit is going to hold orders for. 
     fn new(price: Price) -> Limit {
@@ -47,6 +48,26 @@ impl Limit {
     // To add orders into the list
     pub fn add_order(&mut self, order: Order) -> () {
         self.orders.push(order);
+    }
+
+    // To fill the order
+    fn fill_order(&mut self, market_order: &mut Order) -> () {
+        for limit_order in self.orders.iter_mut() {
+            match market_order.size >= limit_order.size {
+                true => {
+                    market_order.size -= limit_order.size;
+                    limit_order.size = 0.0;
+                },
+                false => {
+                    limit_order.size -= market_order.size;
+                    market_order.size = 0.0;
+                },
+            }
+
+            if market_order.is_filled() {
+                break;
+            }
+        }
     }
 }
 
@@ -63,6 +84,11 @@ impl Order {
             size: size,
             bid_or_ask: bid_or_ask
         }
+    }
+
+    // Check if the Order is filled
+    pub fn is_filled(&self) -> bool {
+        self.size == 0.0
     }
 }
 
@@ -112,5 +138,23 @@ impl OrderBook {
                 }
             },
         }
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    #[test]
+    fn limit_order_fill() {
+        let price: Price = Price::new(1000.0);
+        let mut limit:Limit = Limit::new(price);
+
+        let buy_limit_order: Order = Order::new(100.0, BidorAsk::Bid);
+        limit.add_order(buy_limit_order);
+
+        let mut market_sell_order: Order = Order::new(99.0, BidorAsk::Ask);
+        limit.fill_order(&mut market_sell_order);
+        println!("{:?}", limit);
     }
 }

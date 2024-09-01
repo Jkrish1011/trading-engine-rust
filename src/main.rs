@@ -20,5 +20,5 @@ fn main() {
     engine.add_new_market(pair.clone());
     let buy_order: Order = Order::new(6.5, BidorAsk::Bid);
     let eth_pair: TradingPair = TradingPair::new("ETH".to_string(), "USD".to_string());
-    engine.place_limit_order(eth_pair, 10.000, buy_order).unwrap();
+    engine.place_limit_order(pair, 10.000, buy_order).unwrap();
 }
