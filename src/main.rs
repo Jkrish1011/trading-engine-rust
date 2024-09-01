@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // To showcase if an item is a bid or an ask from the user
 #[derive(Debug)]
 enum BidorAsk {
@@ -5,7 +7,7 @@ enum BidorAsk {
     Ask
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 struct Price {
     integral: u64,
     fractional: u64,
@@ -37,9 +39,9 @@ struct Limit {
 
 impl Limit {
     // When making a new limit, we need to specify on what price level this limit is going to hold orders for. 
-    fn new(price: f64) -> Limit {
+    fn new(price: Price) -> Limit {
         Limit {
-            price: Price::new(price),
+            price: price,
             orders: Vec::new()
         }
     }
@@ -66,11 +68,56 @@ impl Order {
     }
 }
 
+#[derive(Debug)]
+struct OrderBook {
+    asks: HashMap<Price, Limit>,
+    bids: HashMap<Price, Limit>,
+}
+
+impl OrderBook {
+    fn new() -> OrderBook {
+        OrderBook {
+            asks: HashMap::new(),
+            bids: HashMap::new(),
+        }
+    }
+
+    // limit order - will sit in the orderbooks, 
+    // market order - will never sit anywhere and will keep coming in and go to exchange, and get filled by a limit order
+    fn add_order(&mut self, price: f64, order: Order) -> () {
+        // Check if order exists in a price limit, and then append or make a new one accordingly
+        match order.bid_or_ask {
+            BidorAsk::Bid => {
+                let price: Price = Price::new(price);
+                let limit: Option<&mut Limit> = self.bids.get_mut(&price);
+                match limit {
+                    Some(limit) => {
+                        println!("info::limit-already-exists");
+                        limit.add_order(order);
+                    }
+                    None => {
+                        println!("info::to-create-new-limit");
+                        let mut limit: Limit = Limit::new(price);
+                        limit.add_order(order);
+                        self.bids.insert(price, limit);
+                    }
+                }
+            },
+            BidorAsk::Ask => {
+
+            },
+        }
+    }
+}
+
 fn main() {
-    let mut limit: Limit = Limit::new(65.0);
-    let buy_order: Order = Order::new(5.5, BidorAsk::Bid);
-    let sell_order: Order = Order::new(2.45, BidorAsk::Ask);
-    limit.add_order(buy_order);
-    limit.add_order(sell_order);
-    println!("{:?}", limit);
+    let buy_order_1: Order = Order::new(5.5, BidorAsk::Bid);
+    let buy_order_2: Order = Order::new(5.5, BidorAsk::Bid);
+    // let sell_order: Order = Order::new(2.45, BidorAsk::Ask);
+    
+    let mut orderbook = OrderBook::new();
+    orderbook.add_order(5.5, buy_order_1);
+    orderbook.add_order(5.5, buy_order_2);
+
+    println!("{:?}", orderbook);
 }
