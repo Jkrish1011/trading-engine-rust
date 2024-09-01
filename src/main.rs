@@ -1,7 +1,7 @@
 // To showcase if an item is a bid or an ask from the user
 #[derive(Debug)]
 enum BidorAsk {
-    Big, 
+    Bid, 
     Ask
 }
 
@@ -12,12 +12,13 @@ struct Price {
     scalar: u64,
 
 }
-// LIke constructor for Price.
+
+// Like constructor for Price.
 impl Price {
     fn new(price: f64) -> Self {
-        let scalar = 10000;
-        let integral = price as u64; // Just the integral part of the price
-        let fractional = (((price % 1.0) * scalar as f64)) as u64;
+        let scalar: u64 = 10000;
+        let integral: u64 = price as u64; // Just the integral part of the price
+        let fractional: u64 = (((price % 1.0) * scalar as f64)) as u64;
         Price {
             scalar,
             integral,
@@ -42,6 +43,11 @@ impl Limit {
             orders: Vec::new()
         }
     }
+
+    // To add orders into the list
+    fn add_order(&mut self, order: Order) -> () {
+        self.orders.push(order);
+    }
 }
 
 #[derive(Debug)]
@@ -61,6 +67,10 @@ impl Order {
 }
 
 fn main() {
-    let limit = Limit::new(55.6);
+    let mut limit: Limit = Limit::new(65.0);
+    let buy_order: Order = Order::new(5.5, BidorAsk::Bid);
+    let sell_order: Order = Order::new(2.45, BidorAsk::Ask);
+    limit.add_order(buy_order);
+    limit.add_order(sell_order);
     println!("{:?}", limit);
 }
