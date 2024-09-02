@@ -45,6 +45,12 @@ impl Limit {
         }
     }
 
+    fn total_volume(&self) -> f64 {
+        // Works similar to the reduce function in javascript.
+        // We have to unwrap this because it will be returning an Option. In case of error, the program will panic!
+        self.orders.iter().map(|order| order.size).reduce(|a, b| a + b).unwrap()
+    }
+
     // To add orders into the list
     pub fn add_order(&mut self, order: Order) -> () {
         self.orders.push(order);
@@ -146,7 +152,42 @@ pub mod tests {
     use super::*;
 
     #[test]
-    fn limit_order_fill() {
+    fn limit_total_volume() {
+        let price: Price = Price::new(1000.0);
+        let mut limit:Limit = Limit::new(price);
+
+        let buy_limit_order_a: Order = Order::new(100.0, BidorAsk::Bid);
+        let buy_limit_order_b: Order = Order::new(100.0, BidorAsk::Bid);
+        limit.add_order(buy_limit_order_a);
+        limit.add_order(buy_limit_order_b);
+
+        println!("{:?}", limit.total_volume());
+        assert_eq!(limit.total_volume(), 200.0);
+    }
+
+    #[test]
+    fn limit_order_multi000_fill() {
+        let price: Price = Price::new(1000.0);
+        let mut limit:Limit = Limit::new(price);
+
+        let buy_limit_order_a: Order = Order::new(100.0, BidorAsk::Bid);
+        let buy_limit_order_b: Order = Order::new(100.0, BidorAsk::Bid);
+        limit.add_order(buy_limit_order_a);
+        limit.add_order(buy_limit_order_b);
+
+        let mut market_sell_order: Order = Order::new(199.0, BidorAsk::Ask);
+        limit.fill_order(&mut market_sell_order);
+        
+        
+        assert_eq!(market_sell_order.is_filled(), true);
+        assert_eq!(limit.orders.get(0).unwrap().is_filled(), true);
+        assert_eq!(limit.orders.get(1).unwrap().is_filled(), false);
+        println!("{:?}", limit);
+
+    }
+
+    #[test]
+    fn limit_order_single_fill() {
         let price: Price = Price::new(1000.0);
         let mut limit:Limit = Limit::new(price);
 
@@ -156,5 +197,9 @@ pub mod tests {
         let mut market_sell_order: Order = Order::new(99.0, BidorAsk::Ask);
         limit.fill_order(&mut market_sell_order);
         println!("{:?}", limit);
+        
+        assert_eq!(market_sell_order.is_filled(), true);
+        assert_eq!(limit.orders.get(0).unwrap().size, 1.0);
+
     }
 }
