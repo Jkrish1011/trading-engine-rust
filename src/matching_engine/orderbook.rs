@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashMap;
 
 // To showcase if an item is a bid or an ask from the user
@@ -109,6 +110,33 @@ impl OrderBook {
         OrderBook {
             asks: HashMap::new(),
             bids: HashMap::new(),
+        }
+    }
+
+    // TODO: Sort in the highest to lowest order
+    pub fn ask_limits(&mut self) => Vec<&mut Limit> {
+        self.asks.values_mut().collect::<Vec<&mut Limit>>()
+    }
+
+    // TODO: Sort in the lowest to highest order
+    pub fn bid_limits(&mut self) => Vec<&mut Limit> {
+        self.bids.values_mut().collect::<Vec<&mut Limit>>()
+    }
+
+    pub fn fill_market_order(&mut self, market_order: &mut Order) -> () {
+        match market_order.bid_or_ask {
+            BidorAsk::Bid => {
+                for limit_order in self.ask_limits() {
+                    limit_order.fill_order(market_order);
+
+                    if market_order.is_filled() {
+                        break;
+                    }
+                }
+            },
+            BidorAsk::Ask => {
+
+            },
         }
     }
 
