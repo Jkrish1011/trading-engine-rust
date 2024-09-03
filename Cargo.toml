@@ -6,3 +6,9 @@ edition = "2021"
 [dependencies]
 rust_decimal = "1.36"
 rust_decimal_macros = "1.36"
+
+[profile.dev]
+debug=true
+
+[profile.release]
+debug=false
