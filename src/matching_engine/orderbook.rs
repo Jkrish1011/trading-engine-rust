@@ -121,7 +121,7 @@ impl OrderBook {
 
     // limit order - will sit in the orderbooks, 
     // market order - will never sit anywhere and will keep coming in and go to exchange, and get filled by a limit order
-    pub fn add_order(&mut self, price: Decimal, order: Order) -> () {
+    pub fn add_limit_order(&mut self, price: Decimal, order: Order) -> () {
 
         // Check if order exists in a price limit, and then append or make a new one accordingly
         match order.bid_or_ask {
@@ -161,13 +161,25 @@ pub mod tests {
     #[test]
     fn orderbook_fill_market_order_ask() {
         let mut orderbook = OrderBook::new();
-        orderbook.add_order(dec!(500), Order::new(10.0, BidorAsk::Ask));
-        orderbook.add_order(dec!(100), Order::new(10.0, BidorAsk::Ask));
-        orderbook.add_order(dec!(200), Order::new(10.0, BidorAsk::Ask));
-        orderbook.add_order(dec!(300), Order::new(10.0, BidorAsk::Ask));
-        orderbook.add_order(dec!(50), Order::new(10.0, BidorAsk::Ask));
+        orderbook.add_limit_order(dec!(500), Order::new(10.0, BidorAsk::Ask));
+        orderbook.add_limit_order(dec!(100), Order::new(10.0, BidorAsk::Ask));
+        orderbook.add_limit_order(dec!(200), Order::new(10.0, BidorAsk::Ask));
+        orderbook.add_limit_order(dec!(300), Order::new(10.0, BidorAsk::Ask));
+        orderbook.add_limit_order(dec!(50), Order::new(10.0, BidorAsk::Ask));
 
-        println!("{:?}", orderbook.ask_limits());
+        // Fill against the cheapest order
+        let mut market_order = Order::new(10.0 ,BidorAsk::Bid);
+        orderbook.fill_market_order(&mut market_order);
+
+        let ask_limits = orderbook.ask_limits();
+        let matched_limit = ask_limits.get(0).unwrap();//.orders.get(0).unwrap();
+
+        // assert_eq!(matched_limit.price, dec!(100));
+        // assert_eq!(market_order.is_filled(), true);
+
+        let matched_order = matched_limit.orders.get(0).unwrap();
+        assert_eq!(matched_order.is_filled(), true);
+
     }
     
     #[test]
@@ -185,7 +197,7 @@ pub mod tests {
     }
 
     #[test]
-    fn limit_order_multi000_fill() {
+    fn limit_order_multi_fill() {
         let price = dec!(10000);
         let mut limit:Limit = Limit::new(price);
 
